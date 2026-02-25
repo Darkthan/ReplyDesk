@@ -1,0 +1,22 @@
+{
+  "name": "emailauto",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n db,server,client -c blue,green,cyan \"npm run dev:db\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:local": "concurrently -n server,client -c green,cyan \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:db": "docker compose -f docker-compose.dev.yml up",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev:migrate": "node scripts/migrate.js",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "pg": "^8.11.3"
+  }
+}
