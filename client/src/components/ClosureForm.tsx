@@ -135,7 +135,7 @@ export default function ClosureForm({ initial, onSubmit, onCancel }: ClosureForm
               onClick={() => {
                 const el = subjectRef.current;
                 if (!el) return;
-                const s = el.selectionStart, e2 = el.selectionEnd;
+                const s = el.selectionStart ?? 0, e2 = el.selectionEnd ?? 0;
                 const newVal = form.default_subject.slice(0, s) + v.label + form.default_subject.slice(e2);
                 setForm({ ...form, default_subject: newVal });
                 requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = s + v.label.length; el.focus(); });
