@@ -45,6 +45,7 @@ describe('smtp.service - sendReply', () => {
       port: mockSmtpConfig.port,
       secure: mockSmtpConfig.secure,
       auth: mockSmtpConfig.auth,
+      tls: { rejectUnauthorized: false },
     });
 
     expect(mockTransporter.sendMail).toHaveBeenCalledWith({
@@ -172,6 +173,7 @@ describe('smtp.service - sendReply', () => {
         user: 'custom@example.com',
         pass: 'custompass',
       },
+      tls: { rejectUnauthorized: false },
     });
   });
 

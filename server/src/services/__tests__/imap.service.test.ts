@@ -33,7 +33,7 @@ describe('imap.service', () => {
       },
     };
 
-    test('doit retourner true pour des identifiants valides', async () => {
+    test('doit retourner { ok: true } pour des identifiants valides', async () => {
       const result = await validateImapCredentials(validConfig);
 
       expect(ImapFlow).toHaveBeenCalledWith({
@@ -42,32 +42,34 @@ describe('imap.service', () => {
         secure: validConfig.secure,
         auth: validConfig.auth,
         logger: false,
+        tls: { rejectUnauthorized: false },
       });
       expect(mockImapClient.connect).toHaveBeenCalled();
       expect(mockImapClient.logout).toHaveBeenCalled();
-      expect(result).toBe(true);
+      expect(result).toEqual({ ok: true });
     });
 
-    test('doit retourner false si la connexion échoue', async () => {
+    test('doit retourner { ok: false } si la connexion échoue', async () => {
       mockImapClient.connect.mockRejectedValue(new Error('Connection failed'));
 
       const result = await validateImapCredentials(validConfig);
 
-      expect(result).toBe(false);
+      expect(result).toMatchObject({ ok: false });
     });
 
-    test('doit retourner false si l\'authentification échoue', async () => {
-      mockImapClient.connect.mockRejectedValue(new Error('Authentication failed'));
+    test('doit retourner { ok: false, reason: "auth_failed" } si l\'authentification échoue', async () => {
+      const err = new Error('535 Authentication failed');
+      mockImapClient.connect.mockRejectedValue(err);
 
       const result = await validateImapCredentials({
         ...validConfig,
         auth: { user: 'user@example.com', pass: 'wrongpassword' },
       });
 
-      expect(result).toBe(false);
+      expect(result).toMatchObject({ ok: false, reason: 'auth_failed' });
     });
 
-    test('doit retourner false pour un hôte invalide', async () => {
+    test('doit retourner { ok: false } pour un hôte invalide', async () => {
       mockImapClient.connect.mockRejectedValue(new Error('Host not found'));
 
       const result = await validateImapCredentials({
@@ -75,15 +77,15 @@ describe('imap.service', () => {
         host: 'invalid.host.com',
       });
 
-      expect(result).toBe(false);
+      expect(result).toMatchObject({ ok: false });
     });
 
-    test('doit gérer les erreurs de timeout', async () => {
+    test('doit retourner { ok: false } pour un timeout', async () => {
       mockImapClient.connect.mockRejectedValue(new Error('Timeout'));
 
       const result = await validateImapCredentials(validConfig);
 
-      expect(result).toBe(false);
+      expect(result).toMatchObject({ ok: false });
     });
   });
 
