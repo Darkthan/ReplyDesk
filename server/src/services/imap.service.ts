@@ -69,7 +69,7 @@ export async function fetchUnseenMessages(cfg: ImapConfig, since: Date): Promise
     try {
       const searchCriteria = { unseen: true, since };
 
-      for await (const msg of client.fetch(searchCriteria, { envelope: true, markSeen: true })) {
+      for await (const msg of client.fetch(searchCriteria, { envelope: true })) {
         const envelope = msg.envelope;
         if (!envelope?.from?.[0]?.address) continue;
 

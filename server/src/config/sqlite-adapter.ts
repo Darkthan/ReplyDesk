@@ -131,7 +131,7 @@ class SqliteClient {
         // Convertir les booléens SQLite (0/1) en vrais booléens
         const convertedRows = rows.map(row => {
           const converted: any = {};
-          for (const [key, value] of Object.entries(row)) {
+          for (const [key, value] of Object.entries(row as Record<string, unknown>)) {
             // Convertir 0/1 en boolean pour les champs booléens connus
             if (['is_active', 'imap_secure', 'smtp_secure'].includes(key)) {
               converted[key] = value === 1;

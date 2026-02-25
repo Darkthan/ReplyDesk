@@ -28,13 +28,13 @@ describe('auth.service', () => {
     updated_at: new Date(),
   };
 
+  const imapOk: imapService.ImapValidationResult = { ok: true };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock de extractDomain
     (extractDomain as jest.Mock).mockReturnValue('example.com');
 
-    // Mock de encrypt
     (encryptionService.encrypt as jest.Mock).mockReturnValue({
       enc: 'encrypted',
       iv: 'iv123',
@@ -48,8 +48,8 @@ describe('auth.service', () => {
       const password = 'password123';
 
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
-      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null); // Utilisateur n'existe pas
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
+      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
       (UserModel.create as jest.Mock).mockResolvedValue({
         id: 'user-new',
         email: email.toLowerCase(),
@@ -97,10 +97,10 @@ describe('auth.service', () => {
       };
 
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
       (UserModel.findByEmail as jest.Mock)
-        .mockResolvedValueOnce(existingUser) // Premier appel: user existe
-        .mockResolvedValueOnce(existingUser); // Second appel après update
+        .mockResolvedValueOnce(existingUser)
+        .mockResolvedValueOnce(existingUser);
       (UserModel.updatePassword as jest.Mock).mockResolvedValue(undefined);
       (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
 
@@ -118,64 +118,17 @@ describe('auth.service', () => {
       });
     });
 
-    test('doit promouvoir un utilisateur existant en admin si nécessaire', async () => {
-      const email = process.env.ADMIN_EMAIL || 'admin@test.com';
-      const password = 'password123';
-
-      const existingUser = {
-        id: 'user-1',
-        email: email.toLowerCase(),
-        role: 'user' as 'user' | 'admin', // Rôle actuel: user
-        mail_server_id: 'server-1',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-        imap_password_enc: 'enc',
-        imap_password_iv: 'iv',
-        imap_password_tag: 'tag',
-      };
-
-      const updatedUser = {
-        ...existingUser,
-        role: 'admin' as 'user' | 'admin',
-      };
-
-      (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
-      (UserModel.findByEmail as jest.Mock)
-        .mockResolvedValueOnce(existingUser) // Premier appel
-        .mockResolvedValueOnce(updatedUser); // Après updateRole
-      (UserModel.updatePassword as jest.Mock).mockResolvedValue(undefined);
-      (UserModel.updateRole as jest.Mock).mockResolvedValue(updatedUser);
-      (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
-
-      const result = await authenticateAndGetToken(email, password);
-
-      if (email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()) {
-        expect(UserModel.updateRole).toHaveBeenCalledWith('user-1', 'admin');
-        expect(result?.user.role).toBe('admin');
-      } else {
-        // Si ce n'est pas l'email admin, le rôle reste 'user'
-        expect(result?.user.role).toBe('user');
-      }
-    });
-
-    test('doit créer un utilisateur avec le rôle admin si c\'est l\'email admin', async () => {
-      // Note: Ce test dépend de la variable ADMIN_EMAIL configurée dans .env.test
-      // Si ADMIN_EMAIL n'est pas défini ou différent, l'utilisateur sera créé en tant que 'user'
-      const email = process.env.ADMIN_EMAIL || 'admin@test.com';
+    test('doit créer un utilisateur avec le rôle user par défaut', async () => {
+      const email = 'newuser@example.com';
       const password = 'password123';
 
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
-      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null); // N'existe pas
-
-      const expectedRole = email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase() ? 'admin' : 'user';
-
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
+      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
       (UserModel.create as jest.Mock).mockResolvedValue({
-        id: 'user-admin',
+        id: 'user-new',
         email: email.toLowerCase(),
-        role: expectedRole,
+        role: 'user',
         mail_server_id: 'server-1',
         is_active: true,
         created_at: new Date(),
@@ -186,37 +139,65 @@ describe('auth.service', () => {
       const result = await authenticateAndGetToken(email, password);
 
       expect(UserModel.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          role: expectedRole,
-        })
+        expect.objectContaining({ role: 'user' })
       );
-      expect(result?.user.role).toBe(expectedRole);
+      if (!('error' in result)) {
+        expect(result.user.role).toBe('user');
+      }
     });
 
-    test('doit retourner null si le domaine n\'est pas configuré', async () => {
+    test('doit retourner une erreur si le domaine n\'est pas configuré', async () => {
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(null);
 
       const result = await authenticateAndGetToken('user@unknowndomain.com', 'password');
 
-      expect(result).toBeNull();
+      expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error.code).toBe('server_not_found');
+      }
       expect(imapService.validateImapCredentials).not.toHaveBeenCalled();
     });
 
-    test('doit retourner null si les identifiants IMAP sont invalides', async () => {
+    test('doit retourner une erreur si les identifiants IMAP sont invalides', async () => {
+      const imapFail: imapService.ImapValidationResult = {
+        ok: false,
+        reason: 'auth_failed',
+        message: 'Identifiants incorrects',
+      };
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(false);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapFail);
 
       const result = await authenticateAndGetToken('user@example.com', 'wrongpassword');
 
-      expect(result).toBeNull();
+      expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error.code).toBe('auth_failed');
+      }
       expect(UserModel.findByEmail).not.toHaveBeenCalled();
+    });
+
+    test('doit retourner une erreur si le serveur est inaccessible', async () => {
+      const imapFail: imapService.ImapValidationResult = {
+        ok: false,
+        reason: 'unreachable',
+        message: 'Serveur IMAP inaccessible',
+      };
+      (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapFail);
+
+      const result = await authenticateAndGetToken('user@example.com', 'password');
+
+      expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error.code).toBe('unreachable');
+      }
     });
 
     test('doit gérer les emails avec des majuscules', async () => {
       const email = 'User@Example.COM';
 
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
       (UserModel.create as jest.Mock).mockResolvedValue({
         id: 'user-1',
@@ -229,12 +210,10 @@ describe('auth.service', () => {
       });
       (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
 
-      const result = await authenticateAndGetToken(email, 'password');
+      await authenticateAndGetToken(email, 'password');
 
       expect(UserModel.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: email.toLowerCase(),
-        })
+        expect.objectContaining({ email: email.toLowerCase() })
       );
     });
 
@@ -242,7 +221,7 @@ describe('auth.service', () => {
       const email = 'user@example.com';
 
       (ServerModel.findByDomain as jest.Mock).mockResolvedValue(mockServer);
-      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(true);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
       (UserModel.create as jest.Mock).mockResolvedValue({
         id: 'user-123',
@@ -266,6 +245,30 @@ describe('auth.service', () => {
         expect.any(String),
         { expiresIn: '24h' }
       );
+    });
+
+    test('doit utiliser l\'ID de serveur explicite s\'il est fourni', async () => {
+      const email = 'user@example.com';
+
+      (ServerModel.findById as jest.Mock).mockResolvedValue(mockServer);
+      (imapService.validateImapCredentials as jest.Mock).mockResolvedValue(imapOk);
+      (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
+      (UserModel.create as jest.Mock).mockResolvedValue({
+        id: 'user-1',
+        email: email.toLowerCase(),
+        role: 'user',
+        mail_server_id: 'server-1',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
+
+      await authenticateAndGetToken(email, 'password', 'server-1');
+
+      expect(ServerModel.findById).toHaveBeenCalledWith('server-1');
+      expect(ServerModel.findByDomain).not.toHaveBeenCalled();
+      expect(extractDomain).not.toHaveBeenCalled();
     });
   });
 
