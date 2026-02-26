@@ -20,7 +20,7 @@ export const ClosureModel = {
 
   async findActive(): Promise<ClosurePeriod[]> {
     const { rows } = await pool.query(
-      "SELECT * FROM closure_periods WHERE is_active = true AND end_date > datetime('now') ORDER BY start_date"
+      "SELECT * FROM closure_periods WHERE is_active = true AND end_date > NOW() ORDER BY start_date"
     );
     return rows;
   },

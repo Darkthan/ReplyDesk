@@ -78,7 +78,7 @@ export const UserModel = {
     smtp_password_iv: string;
     smtp_password_tag: string;
   }>> {
-    const { rows } = await pool.query(`SELECT u.*, us.id AS subscription_id, us.closure_period_id, us.custom_subject, us.custom_message, cp.name AS closure_name, cp.default_subject, cp.default_message, cp.reason, cp.start_date AS period_start_date, cp.end_date AS period_end_date, ms.imap_host, ms.imap_port, ms.imap_secure, ms.smtp_host, ms.smtp_port, ms.smtp_secure, ms.smtp_user, ms.smtp_password_enc, ms.smtp_password_iv, ms.smtp_password_tag FROM users u JOIN user_subscriptions us ON us.user_id = u.id JOIN closure_periods cp ON cp.id = us.closure_period_id JOIN mail_servers ms ON ms.id = u.mail_server_id WHERE u.is_active = true AND us.is_active = true AND cp.is_active = true AND datetime('now') BETWEEN cp.start_date AND cp.end_date`);
+    const { rows } = await pool.query(`SELECT u.*, us.id AS subscription_id, us.closure_period_id, us.custom_subject, us.custom_message, cp.name AS closure_name, cp.default_subject, cp.default_message, cp.reason, cp.start_date AS period_start_date, cp.end_date AS period_end_date, ms.imap_host, ms.imap_port, ms.imap_secure, ms.smtp_host, ms.smtp_port, ms.smtp_secure, ms.smtp_user, ms.smtp_password_enc, ms.smtp_password_iv, ms.smtp_password_tag FROM users u JOIN user_subscriptions us ON us.user_id = u.id JOIN closure_periods cp ON cp.id = us.closure_period_id JOIN mail_servers ms ON ms.id = u.mail_server_id WHERE u.is_active = true AND us.is_active = true AND cp.is_active = true AND NOW() BETWEEN cp.start_date AND cp.end_date`);
     return rows;
   },
 };
