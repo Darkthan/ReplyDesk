@@ -12,6 +12,7 @@ import ServersPage from './pages/admin/ServersPage';
 import ClosuresPage from './pages/admin/ClosuresPage';
 import UsersPage from './pages/admin/UsersPage';
 import SecurityPage from './pages/admin/SecurityPage';
+import ChangePasswordPage from './pages/admin/ChangePasswordPage';
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="closures" element={<ClosuresPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="security" element={<SecurityPage />} />
+              <Route path="change-password" element={<ChangePasswordPage />} />
             </Route>
 
             {/* ── Routes utilisateur ───────────────────────────────── */}

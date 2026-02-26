@@ -89,6 +89,13 @@ export const api = {
   deleteUser: (id: string) =>
     request<void>(`/admin/users/${id}`, { method: 'DELETE' }),
 
+  // Admin auth
+  changeAdminPassword: (oldPassword: string, newPassword: string) =>
+    request<{ ok: boolean }>('/admin/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ oldPassword, newPassword }),
+    }),
+
   // Subscriptions
   getSubscriptions: () => request<any[]>('/subscriptions'),
   createSubscription: (data: any) =>

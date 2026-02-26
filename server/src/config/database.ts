@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcrypt';
 import { config } from './index';
 import { logger } from '../utils/logger';
 import { SqlitePool, generateUUID } from './sqlite-adapter';
@@ -130,6 +131,18 @@ export async function runMigrations(): Promise<void> {
         logger.info(`Migration 006: fixed ${nullUsers.length} user(s) with null id`);
       }
 
+      // Créer l'admin par défaut si aucun admin n'existe
+      const { rows: existingAdmins } = await client.query("SELECT id FROM admins LIMIT 1");
+      if (existingAdmins.length === 0) {
+        const passwordHash = await bcrypt.hash(config.adminPassword, 10);
+        const adminId = generateUUID();
+        await client.query(
+          "INSERT INTO admins (id, username, password_hash, email) VALUES ($1, 'admin', $2, $3)",
+          [adminId, passwordHash, config.adminEmail || 'admin@emailauto.local']
+        );
+        logger.info('Default admin created from ADMIN_PASSWORD env variable');
+      }
+
       // Migration 007 — tables de sécurité (idempotente)
       const { rows: securityTables } = await client.query(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='security_settings'"
@@ -192,6 +205,17 @@ export async function runMigrations(): Promise<void> {
       if (createdByPgInfo.length > 0 && createdByPgInfo[0].is_nullable === 'NO') {
         await client.query('ALTER TABLE closure_periods ALTER COLUMN created_by DROP NOT NULL');
         logger.info('Migration 005 executed successfully');
+      }
+
+      // Créer l'admin par défaut si aucun admin n'existe
+      const { rows: existingAdminsPg } = await client.query("SELECT id FROM admins LIMIT 1");
+      if (existingAdminsPg.length === 0) {
+        const passwordHash = await bcrypt.hash(config.adminPassword, 10);
+        await client.query(
+          "INSERT INTO admins (username, password_hash, email) VALUES ('admin', $1, $2)",
+          [passwordHash, config.adminEmail || 'admin@emailauto.local']
+        );
+        logger.info('Default admin created from ADMIN_PASSWORD env variable');
       }
 
       // Migration 007 — tables de sécurité (idempotente)

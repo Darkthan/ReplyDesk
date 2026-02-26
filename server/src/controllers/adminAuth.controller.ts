@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { authenticateAdmin } from '../services/adminAuth.service';
+import { authenticateAdmin, changeAdminPassword } from '../services/adminAuth.service';
 import { AdminModel } from '../models/admin.model';
 import { checkAccess, recordFailure, recordSuccess } from '../services/loginAttempts.service';
 
@@ -44,6 +44,20 @@ export const AdminAuthController = {
 
   async logout(_req: Request, res: Response): Promise<void> {
     res.clearCookie(ADMIN_COOKIE_NAME, { path: '/' });
+    res.json({ ok: true });
+  },
+
+  async changePassword(req: Request, res: Response): Promise<void> {
+    if (!req.admin) {
+      res.status(401).json({ error: 'Non authentifié' });
+      return;
+    }
+    const { oldPassword, newPassword } = req.body;
+    const ok = await changeAdminPassword(req.admin.adminId, oldPassword, newPassword);
+    if (!ok) {
+      res.status(400).json({ error: 'Ancien mot de passe incorrect' });
+      return;
+    }
     res.json({ ok: true });
   },
 

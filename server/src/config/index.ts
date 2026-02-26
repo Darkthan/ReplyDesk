@@ -13,6 +13,7 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   encryptionKey: process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
   adminEmail: process.env.ADMIN_EMAIL || '',
+  adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
   pollingIntervalMs: parseInt(process.env.POLLING_INTERVAL_MS || '60000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
 };
