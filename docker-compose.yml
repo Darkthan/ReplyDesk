@@ -38,9 +38,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       POLLING_INTERVAL_MS: ${POLLING_INTERVAL_MS:-60000}
-      PORT: ${PORT:-3000}
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "${PORT:-3000}:3000"
     networks:
       - backend
       - frontend
