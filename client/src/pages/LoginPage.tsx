@@ -106,8 +106,8 @@ export default function LoginPage() {
             {loading ? 'Vérification...' : 'Se connecter'}
           </button>
         </form>
-      </div>
-        <div className="mt-8 pt-4 border-t border-gray-100 text-center">
+
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
           <Link
             to="/admin/login"
             className="text-xs text-gray-300 hover:text-gray-400 transition-colors"
@@ -115,6 +115,7 @@ export default function LoginPage() {
             Administration
           </Link>
         </div>
+      </div>
     </div>
   );
 }
