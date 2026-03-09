@@ -4,3 +4,4 @@ dist/
 *.log
 .DS_Store
 .claude/
+e2e/package-lock.json
