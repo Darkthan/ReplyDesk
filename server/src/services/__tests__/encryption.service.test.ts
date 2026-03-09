@@ -139,8 +139,10 @@ describe('encryption.service', () => {
     test('doit lever une erreur si les données ont été modifiées', () => {
       const plainText = 'test';
       const encrypted = encrypt(plainText);
-      // Modifier les données chiffrées
-      const tamperedEnc = encrypted.enc.substring(0, encrypted.enc.length - 2) + '00';
+      // XOR le dernier octet avec 0xff pour garantir un changement quelle que soit la valeur d'origine
+      const lastByte = encrypted.enc.slice(-2);
+      const flippedByte = (parseInt(lastByte, 16) ^ 0xff).toString(16).padStart(2, '0');
+      const tamperedEnc = encrypted.enc.slice(0, -2) + flippedByte;
 
       expect(() => decrypt(tamperedEnc, encrypted.iv, encrypted.tag)).toThrow();
     });
