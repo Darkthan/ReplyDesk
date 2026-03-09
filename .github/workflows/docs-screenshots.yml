@@ -25,7 +25,7 @@ jobs:
 
       # ── Backend ──────────────────────────────────────────────────────────────
       - name: Install server dependencies
-        run: npm ci
+        run: npm install
         working-directory: server
 
       - name: Build server
@@ -45,7 +45,7 @@ jobs:
 
       # ── Frontend ─────────────────────────────────────────────────────────────
       - name: Install client dependencies
-        run: npm ci
+        run: npm install
         working-directory: client
 
       - name: Start frontend (dev server)
