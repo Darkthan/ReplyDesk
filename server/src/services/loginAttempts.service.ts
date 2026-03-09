@@ -35,6 +35,42 @@ export function invalidateSettingsCache(): void {
   settingsCache = null;
 }
 
+export interface LockedAccount {
+  key: string;
+  type: 'user' | 'admin';
+  identifier: string;
+  lockedUntil: number;
+  remainingMs: number;
+}
+
+export function getLockedAccounts(): LockedAccount[] {
+  const now = Date.now();
+  const result: LockedAccount[] = [];
+  for (const [key, rec] of attempts.entries()) {
+    if (rec.lockedUntil && now < rec.lockedUntil) {
+      const [type, ...rest] = key.split(':');
+      result.push({
+        key,
+        type: type as 'user' | 'admin',
+        identifier: rest.join(':'),
+        lockedUntil: rec.lockedUntil,
+        remainingMs: rec.lockedUntil - now,
+      });
+    }
+  }
+  return result;
+}
+
+export function unlockAccount(key: string): boolean {
+  if (!attempts.has(key)) return false;
+  attempts.delete(key);
+  return true;
+}
+
+export function unlockAll(): void {
+  attempts.clear();
+}
+
 function normalizeIp(ip: string | undefined): string {
   if (!ip) return 'unknown';
   // Normaliser ::ffff:x.x.x.x (IPv4 mappé IPv6)

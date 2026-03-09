@@ -15,6 +15,10 @@ router.get('/ip-rules', asyncHandler(SecurityController.getIpRules));
 router.post('/ip-rules', asyncHandler(SecurityController.createIpRule));
 router.delete('/ip-rules/:id', asyncHandler(SecurityController.deleteIpRule));
 
+router.get('/locks', asyncHandler(SecurityController.getLocks));
+router.delete('/locks', asyncHandler(SecurityController.unlockAll));
+router.delete('/locks/:key', asyncHandler(SecurityController.unlock));
+
 router.get('/logs', asyncHandler(SecurityController.getLogs));
 router.delete('/logs', asyncHandler(SecurityController.clearLogs));
 

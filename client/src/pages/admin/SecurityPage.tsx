@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '../../api/adminClient';
 
-type Tab = 'settings' | 'ip-rules' | 'logs';
+type Tab = 'settings' | 'locks' | 'ip-rules' | 'logs';
+
+interface LockedAccount {
+  key: string;
+  type: 'user' | 'admin';
+  identifier: string;
+  lockedUntil: number;
+  remainingMs: number;
+}
 type IpType = 'whitelist' | 'blacklist';
 
 interface SecuritySettings {
@@ -46,6 +54,7 @@ export default function SecurityPage() {
       <div className="flex border-b border-gray-200 mb-6">
         {([
           { key: 'settings', label: 'Paramètres' },
+          { key: 'locks', label: 'Comptes verrouillés' },
           { key: 'ip-rules', label: 'Règles IP' },
           { key: 'logs', label: 'Journaux de connexion' },
         ] as { key: Tab; label: string }[]).map(({ key, label }) => (
@@ -64,6 +73,7 @@ export default function SecurityPage() {
       </div>
 
       {tab === 'settings' && <SettingsTab />}
+      {tab === 'locks' && <LocksTab />}
       {tab === 'ip-rules' && <IpRulesTab />}
       {tab === 'logs' && <LogsTab />}
     </div>
@@ -145,6 +155,109 @@ function SettingsTab() {
       >
         {saving ? 'Enregistrement...' : 'Enregistrer'}
       </button>
+    </div>
+  );
+}
+
+// ── Onglet Comptes verrouillés ────────────────────────────────────────────────
+
+function LocksTab() {
+  const [locks, setLocks] = useState<LockedAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [unlocking, setUnlocking] = useState<string | null>(null);
+  const [unlockingAll, setUnlockingAll] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    adminApi.getLockedAccounts().then((data: LockedAccount[]) => setLocks(data)).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleUnlock = async (key: string) => {
+    setUnlocking(key);
+    try {
+      await adminApi.unlockAccount(key);
+      load();
+    } finally {
+      setUnlocking(null);
+    }
+  };
+
+  const handleUnlockAll = async () => {
+    setUnlockingAll(true);
+    try {
+      await adminApi.unlockAll();
+      load();
+    } finally {
+      setUnlockingAll(false);
+    }
+  };
+
+  const fmtRemaining = (ms: number) => {
+    const m = Math.ceil(ms / 60_000);
+    return m < 1 ? 'moins d\'1 min' : `${m} min`;
+  };
+
+  if (loading) return <div className="text-gray-500 text-sm">Chargement...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">
+          {locks.length === 0
+            ? 'Aucun compte verrouillé actuellement.'
+            : `${locks.length} compte${locks.length > 1 ? 's' : ''} verrouillé${locks.length > 1 ? 's' : ''}`}
+        </p>
+        {locks.length > 0 && (
+          <button
+            onClick={handleUnlockAll}
+            disabled={unlockingAll}
+            className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50"
+          >
+            {unlockingAll ? 'Déverrouillage...' : 'Tout déverrouiller'}
+          </button>
+        )}
+      </div>
+
+      {locks.length > 0 && (
+        <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-left px-4 py-2 font-medium text-gray-600">Identifiant</th>
+              <th className="text-left px-4 py-2 font-medium text-gray-600">Type</th>
+              <th className="text-left px-4 py-2 font-medium text-gray-600">Temps restant</th>
+              <th className="px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {locks.map((lock) => (
+              <tr key={lock.key} className="border-t border-gray-100">
+                <td className="px-4 py-2 font-mono text-xs">{lock.identifier}</td>
+                <td className="px-4 py-2">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                    lock.type === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {lock.type === 'admin' ? 'Admin' : 'Utilisateur'}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-orange-600 text-xs font-medium">{fmtRemaining(lock.remainingMs)}</td>
+                <td className="px-4 py-2 text-right">
+                  <button
+                    onClick={() => handleUnlock(lock.key)}
+                    disabled={unlocking === lock.key}
+                    className="text-indigo-600 hover:text-indigo-800 text-xs disabled:opacity-50"
+                  >
+                    {unlocking === lock.key ? '...' : 'Déverrouiller'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <button onClick={load} className="text-xs text-gray-400 hover:text-gray-600">↻ Actualiser</button>
     </div>
   );
 }

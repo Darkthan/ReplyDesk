@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { SecuritySettingsModel } from '../models/securitySettings.model';
 import { IpRuleModel } from '../models/ipRule.model';
 import { ConnectionLogModel } from '../models/connectionLog.model';
-import { invalidateSettingsCache } from '../services/loginAttempts.service';
+import { invalidateSettingsCache, getLockedAccounts, unlockAccount, unlockAll } from '../services/loginAttempts.service';
 
 export const SecurityController = {
   // ── Paramètres ──────────────────────────────────────────────────────────────
@@ -91,6 +91,27 @@ export const SecurityController = {
       res.status(404).json({ error: 'Règle introuvable' });
       return;
     }
+    res.status(204).send();
+  },
+
+  // ── Comptes verrouillés ──────────────────────────────────────────────────────
+
+  async getLocks(_req: Request, res: Response): Promise<void> {
+    res.json(getLockedAccounts());
+  },
+
+  async unlock(req: Request, res: Response): Promise<void> {
+    const key = decodeURIComponent(req.params.key);
+    const found = unlockAccount(key);
+    if (!found) {
+      res.status(404).json({ error: 'Compte non trouvé ou déjà déverrouillé' });
+      return;
+    }
+    res.status(204).send();
+  },
+
+  async unlockAll(_req: Request, res: Response): Promise<void> {
+    unlockAll();
     res.status(204).send();
   },
 

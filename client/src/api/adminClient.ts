@@ -173,4 +173,16 @@ export const adminApi = {
   async clearConnectionLogs() {
     return this.request('/admin/security/logs', { method: 'DELETE' });
   },
+
+  async getLockedAccounts() {
+    return this.request('/admin/security/locks');
+  },
+
+  async unlockAccount(key: string) {
+    return this.request(`/admin/security/locks/${encodeURIComponent(key)}`, { method: 'DELETE' });
+  },
+
+  async unlockAll() {
+    return this.request('/admin/security/locks', { method: 'DELETE' });
+  },
 };
