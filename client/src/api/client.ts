@@ -23,7 +23,10 @@ async function request<T>(path: string, options: RequestInit = {}, noRedirect = 
     return undefined as T;
   }
 
-  const data = await res.json();
+  const data = await res.json().catch(() => {
+    if (!res.ok) throw new Error('Erreur serveur');
+    throw new Error('Réponse serveur invalide');
+  });
 
   if (!res.ok) {
     throw new Error(data.error || 'Erreur serveur');

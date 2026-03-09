@@ -30,7 +30,7 @@ export const adminApi = {
       return null;
     }
 
-    return response.json();
+    return response.json().catch(() => { throw new Error('Réponse serveur invalide'); });
   },
 
   // Auth
@@ -43,11 +43,11 @@ export const adminApi = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
       throw new Error(error.error || 'Échec de la connexion');
     }
 
-    return response.json();
+    return response.json().catch(() => { throw new Error('Réponse serveur invalide'); });
   },
 
   async logout() {
