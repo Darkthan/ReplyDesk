@@ -29,11 +29,12 @@ export async function authenticateAndGetToken(
   }
 
   // Valider les identifiants IMAP avec le serveur configuré
+  const imapUser = server.imap_login_format === 'local' ? email.split('@')[0] : email;
   const result = await validateImapCredentials({
     host: server.imap_host,
     port: server.imap_port,
     secure: server.imap_secure,
-    auth: { user: email, pass: imapPassword },
+    auth: { user: imapUser, pass: imapPassword },
   });
 
   if (!result.ok) {

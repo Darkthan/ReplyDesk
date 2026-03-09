@@ -5,6 +5,7 @@ export interface MailServer {
   imap_host: string;
   imap_port: number;
   imap_secure: 'ssl' | 'starttls' | 'none';
+  imap_login_format: 'full' | 'local';
   smtp_host: string;
   smtp_port: number;
   smtp_secure: 'ssl' | 'starttls' | 'none';

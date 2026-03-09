@@ -7,6 +7,7 @@ interface ServerFormProps {
     imap_host: string;
     imap_port: number;
     imap_secure: 'ssl' | 'starttls' | 'none';
+    imap_login_format: 'full' | 'local';
     smtp_host: string;
     smtp_port: number;
     smtp_secure: 'ssl' | 'starttls' | 'none';
@@ -23,6 +24,7 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
     imap_host: initial?.imap_host || '',
     imap_port: initial?.imap_port || 993,
     imap_secure: initial?.imap_secure ?? 'ssl',
+    imap_login_format: initial?.imap_login_format ?? 'full',
     smtp_host: initial?.smtp_host || '',
     smtp_port: initial?.smtp_port || 587,
     smtp_secure: initial?.smtp_secure ?? 'none',
@@ -109,7 +111,7 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
               className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
             />
           </div>
-          <div className="col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700">Sécurité de connexion IMAP</label>
             <select
               value={form.imap_secure}
@@ -119,6 +121,17 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
               <option value="ssl">SSL/TLS (port 993)</option>
               <option value="starttls">STARTTLS (port 143)</option>
               <option value="none">Aucun chiffrement (non recommandé)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Format du login IMAP</label>
+            <select
+              value={form.imap_login_format}
+              onChange={(e) => setForm({ ...form, imap_login_format: e.target.value as 'full' | 'local' })}
+              className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            >
+              <option value="full">Email complet (user@domaine.fr)</option>
+              <option value="local">Nom seul (user)</option>
             </select>
           </div>
         </div>

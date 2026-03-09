@@ -163,15 +163,22 @@ export async function runMigrations(): Promise<void> {
       );
       if (secureType.length > 0 && secureType[0].type.toUpperCase() !== 'TEXT') {
         logger.info('Running migration 008: converting secure columns to TEXT enum...');
-        await client.query('PRAGMA foreign_keys = OFF');
-        const migration8Path = path.join(__dirname, '..', 'db', 'migrations', '008_secure_enum.sqlite.sql');
-        const migration8Sql = fs.readFileSync(migration8Path, 'utf-8');
-        const statements8 = migration8Sql.split(';').map((s: string) => s.trim()).filter((s: string) => s.length > 0 && !s.startsWith('--'));
-        for (const statement of statements8) {
-          await client.query(statement);
-        }
-        await client.query('PRAGMA foreign_keys = ON');
+        await client.query("PRAGMA foreign_keys = OFF");
+        await client.query("CREATE TABLE mail_servers_v2 (id TEXT PRIMARY KEY, domain TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL, imap_host TEXT NOT NULL, imap_port INTEGER NOT NULL DEFAULT 993, imap_secure TEXT NOT NULL DEFAULT 'ssl', smtp_host TEXT NOT NULL, smtp_port INTEGER NOT NULL DEFAULT 587, smtp_secure TEXT NOT NULL DEFAULT 'none', smtp_user TEXT NOT NULL, smtp_password_enc TEXT NOT NULL, smtp_password_iv TEXT NOT NULL, smtp_password_tag TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')))");
+        await client.query("INSERT INTO mail_servers_v2 SELECT id, domain, display_name, imap_host, imap_port, CASE WHEN imap_secure = 1 THEN 'ssl' ELSE 'none' END, smtp_host, smtp_port, CASE WHEN smtp_secure = 1 THEN 'ssl' ELSE 'none' END, smtp_user, smtp_password_enc, smtp_password_iv, smtp_password_tag, created_at, updated_at FROM mail_servers");
+        await client.query("DROP TABLE mail_servers");
+        await client.query("ALTER TABLE mail_servers_v2 RENAME TO mail_servers");
+        await client.query("PRAGMA foreign_keys = ON");
         logger.info('Migration 008 executed successfully');
+      }
+
+      // Migration 009 — colonne imap_login_format (idempotente)
+      const { rows: loginFormatCol } = await client.query(
+        "SELECT name FROM pragma_table_info('mail_servers') WHERE name='imap_login_format'"
+      );
+      if (loginFormatCol.length === 0) {
+        await client.query("ALTER TABLE mail_servers ADD COLUMN imap_login_format TEXT NOT NULL DEFAULT 'full'");
+        logger.info('Migration 009 executed successfully');
       }
     } else {
       // Migrations PostgreSQL
@@ -258,6 +265,15 @@ export async function runMigrations(): Promise<void> {
         const migration8Sql = fs.readFileSync(migration8Path, 'utf-8');
         await client.query(migration8Sql);
         logger.info('Migration 008 executed successfully');
+      }
+
+      // Migration 009 — colonne imap_login_format (idempotente)
+      const { rows: loginFormatPg } = await client.query(
+        "SELECT column_name FROM information_schema.columns WHERE table_name='mail_servers' AND column_name='imap_login_format'"
+      );
+      if (loginFormatPg.length === 0) {
+        await client.query("ALTER TABLE mail_servers ADD COLUMN imap_login_format TEXT NOT NULL DEFAULT 'full'");
+        logger.info('Migration 009 executed successfully');
       }
     }
   } catch (error: any) {

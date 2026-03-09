@@ -13,6 +13,7 @@ const createServerSchema = z.object({
   imap_host: z.string().min(1, 'Hôte IMAP requis'),
   imap_port: z.number().int().positive().default(993),
   imap_secure: z.enum(['ssl', 'starttls', 'none']).default('ssl'),
+  imap_login_format: z.enum(['full', 'local']).default('full'),
   smtp_host: z.string().min(1, 'Hôte SMTP requis'),
   smtp_port: z.number().int().positive().default(587),
   smtp_secure: z.enum(['ssl', 'starttls', 'none']).default('none'),

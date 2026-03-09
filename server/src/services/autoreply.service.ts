@@ -26,6 +26,7 @@ interface SubscriptionData {
   imap_host: string;
   imap_port: number;
   imap_secure: 'ssl' | 'starttls' | 'none';
+  imap_login_format: 'full' | 'local';
   smtp_host: string;
   smtp_port: number;
   smtp_secure: 'ssl' | 'starttls' | 'none';
@@ -55,11 +56,12 @@ export async function processUserAutoReply(sub: SubscriptionData): Promise<void>
   const imapPassword = decrypt(sub.imap_password_enc, sub.imap_password_iv, sub.imap_password_tag);
   const smtpPassword = decrypt(sub.smtp_password_enc, sub.smtp_password_iv, sub.smtp_password_tag);
 
+  const imapUser = sub.imap_login_format === 'local' ? sub.email.split('@')[0] : sub.email;
   const imapCfg = {
     host: sub.imap_host,
     port: sub.imap_port,
     secure: sub.imap_secure,
-    auth: { user: sub.email, pass: imapPassword },
+    auth: { user: imapUser, pass: imapPassword },
   };
 
   // Le SMTP s'authentifie avec le compte relay du serveur,
