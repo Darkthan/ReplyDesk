@@ -6,10 +6,10 @@ interface ServerFormProps {
     display_name: string;
     imap_host: string;
     imap_port: number;
-    imap_secure: boolean;
+    imap_secure: 'ssl' | 'starttls' | 'none';
     smtp_host: string;
     smtp_port: number;
-    smtp_secure: boolean;
+    smtp_secure: 'ssl' | 'starttls' | 'none';
     smtp_user: string;
   };
   onSubmit: (data: any) => Promise<void>;
@@ -22,10 +22,10 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
     display_name: initial?.display_name || '',
     imap_host: initial?.imap_host || '',
     imap_port: initial?.imap_port || 993,
-    imap_secure: initial?.imap_secure ?? true,
+    imap_secure: initial?.imap_secure ?? 'ssl',
     smtp_host: initial?.smtp_host || '',
     smtp_port: initial?.smtp_port || 587,
-    smtp_secure: initial?.smtp_secure ?? false,
+    smtp_secure: initial?.smtp_secure ?? 'none',
     smtp_user: initial?.smtp_user || '',
     smtp_password: '',
   });
@@ -109,15 +109,17 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
               className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
             />
           </div>
-          <div className="col-span-2 flex items-center">
-            <input
-              type="checkbox"
-              id="imap_secure"
-              checked={form.imap_secure}
-              onChange={(e) => setForm({ ...form, imap_secure: e.target.checked })}
-              className="h-4 w-4 text-indigo-600 rounded"
-            />
-            <label htmlFor="imap_secure" className="ml-2 text-sm text-gray-700">SSL/TLS (port 993)</label>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Sécurité de connexion IMAP</label>
+            <select
+              value={form.imap_secure}
+              onChange={(e) => setForm({ ...form, imap_secure: e.target.value as 'ssl' | 'starttls' | 'none' })}
+              className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            >
+              <option value="ssl">SSL/TLS (port 993)</option>
+              <option value="starttls">STARTTLS (port 143)</option>
+              <option value="none">Aucun chiffrement (non recommandé)</option>
+            </select>
           </div>
         </div>
       </div>
@@ -176,15 +178,17 @@ export default function ServerForm({ initial, onSubmit, onCancel }: ServerFormPr
               required={!isEdit}
             />
           </div>
-          <div className="col-span-2 flex items-center">
-            <input
-              type="checkbox"
-              id="smtp_secure"
-              checked={form.smtp_secure}
-              onChange={(e) => setForm({ ...form, smtp_secure: e.target.checked })}
-              className="h-4 w-4 text-indigo-600 rounded"
-            />
-            <label htmlFor="smtp_secure" className="ml-2 text-sm text-gray-700">SSL/TLS (port 465)</label>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Sécurité de connexion SMTP</label>
+            <select
+              value={form.smtp_secure}
+              onChange={(e) => setForm({ ...form, smtp_secure: e.target.value as 'ssl' | 'starttls' | 'none' })}
+              className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            >
+              <option value="ssl">SSL/TLS (port 465)</option>
+              <option value="starttls">STARTTLS (port 587)</option>
+              <option value="none">Aucun chiffrement (non recommandé)</option>
+            </select>
           </div>
         </div>
       </div>

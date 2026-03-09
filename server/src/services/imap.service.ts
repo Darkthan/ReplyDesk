@@ -4,10 +4,22 @@ import { logger } from '../utils/logger';
 interface ImapConfig {
   host: string;
   port: number;
-  secure: boolean;
+  secure: 'ssl' | 'starttls' | 'none';
   auth: {
     user: string;
     pass: string;
+  };
+}
+
+function buildImapFlowOptions(cfg: ImapConfig) {
+  return {
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure === 'ssl',
+    requireTLS: cfg.secure === 'starttls',
+    auth: cfg.auth,
+    logger: false as const,
+    tls: { rejectUnauthorized: false },
   };
 }
 
@@ -16,14 +28,7 @@ export type ImapValidationResult =
   | { ok: false; reason: 'unreachable' | 'auth_failed' | 'unknown'; message: string };
 
 export async function validateImapCredentials(cfg: ImapConfig): Promise<ImapValidationResult> {
-  const client = new ImapFlow({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.secure,
-    auth: cfg.auth,
-    logger: false,
-    tls: { rejectUnauthorized: false },
-  });
+  const client = new ImapFlow(buildImapFlowOptions(cfg));
 
   try {
     await client.connect();
@@ -51,14 +56,7 @@ export interface UnseenMessage {
 }
 
 export async function fetchUnseenMessages(cfg: ImapConfig, since: Date): Promise<UnseenMessage[]> {
-  const client = new ImapFlow({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.secure,
-    auth: cfg.auth,
-    logger: false,
-    tls: { rejectUnauthorized: false },
-  });
+  const client = new ImapFlow(buildImapFlowOptions(cfg));
 
   const messages: UnseenMessage[] = [];
 

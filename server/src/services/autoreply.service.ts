@@ -25,10 +25,10 @@ interface SubscriptionData {
   // Config réseau du serveur
   imap_host: string;
   imap_port: number;
-  imap_secure: boolean;
+  imap_secure: 'ssl' | 'starttls' | 'none';
   smtp_host: string;
   smtp_port: number;
-  smtp_secure: boolean;
+  smtp_secure: 'ssl' | 'starttls' | 'none';
   // Credentials SMTP dédiés du serveur (relay)
   smtp_user: string;
   smtp_password_enc: string;

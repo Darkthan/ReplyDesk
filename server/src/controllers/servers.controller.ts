@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import { ServerModel } from '../models/server.model';
 import { encrypt, decrypt } from '../services/encryption.service';
 
-function testTcpConnection(host: string, port: number, secure: boolean): Promise<{ ok: boolean; error?: string }> {
+function testTcpConnection(host: string, port: number, secure: 'ssl' | 'starttls' | 'none'): Promise<{ ok: boolean; error?: string }> {
   return new Promise((resolve) => {
     const TIMEOUT = 8000;
     let socket: net.Socket | tls.TLSSocket;
@@ -19,7 +19,7 @@ function testTcpConnection(host: string, port: number, secure: boolean): Promise
       resolve({ ok: false, error: err.message });
     };
 
-    if (secure) {
+    if (secure === 'ssl') {
       socket = tls.connect({ host, port, rejectUnauthorized: false }, onConnect);
     } else {
       socket = net.createConnection({ host, port }, onConnect);
@@ -66,7 +66,9 @@ export const ServersController = {
       const transporter = nodemailer.createTransport({
         host: server.smtp_host,
         port: server.smtp_port,
-        secure: server.smtp_secure,
+        secure: server.smtp_secure === 'ssl',
+        requireTLS: server.smtp_secure === 'starttls',
+        ignoreTLS: server.smtp_secure === 'none',
         auth: { user: server.smtp_user, pass: smtpPassword },
         tls: { rejectUnauthorized: false },
       });

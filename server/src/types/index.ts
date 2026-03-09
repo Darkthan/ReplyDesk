@@ -4,10 +4,10 @@ export interface MailServer {
   display_name: string;
   imap_host: string;
   imap_port: number;
-  imap_secure: boolean;
+  imap_secure: 'ssl' | 'starttls' | 'none';
   smtp_host: string;
   smtp_port: number;
-  smtp_secure: boolean;
+  smtp_secure: 'ssl' | 'starttls' | 'none';
   smtp_user: string;
   smtp_password_enc: string;
   smtp_password_iv: string;

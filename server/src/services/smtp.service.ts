@@ -4,7 +4,7 @@ import { logger } from '../utils/logger';
 interface SmtpConfig {
   host: string;
   port: number;
-  secure: boolean;
+  secure: 'ssl' | 'starttls' | 'none';
   auth: {
     user: string;
     pass: string;
@@ -24,7 +24,9 @@ export async function sendReply(smtp: SmtpConfig, options: ReplyOptions): Promis
   const transporter = nodemailer.createTransport({
     host: smtp.host,
     port: smtp.port,
-    secure: smtp.secure,
+    secure: smtp.secure === 'ssl',
+    requireTLS: smtp.secure === 'starttls',
+    ignoreTLS: smtp.secure === 'none',
     auth: smtp.auth,
     tls: { rejectUnauthorized: false },
   });

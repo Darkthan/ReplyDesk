@@ -156,6 +156,23 @@ export async function runMigrations(): Promise<void> {
         await client.query(`INSERT OR IGNORE INTO security_settings (key, value) VALUES ('lockout_duration_ms', '900000')`);
         logger.info('Migration 007 executed successfully');
       }
+
+      // Migration 008 — convertir imap_secure/smtp_secure de INTEGER à TEXT enum
+      const { rows: secureType } = await client.query(
+        "SELECT type FROM pragma_table_info('mail_servers') WHERE name='imap_secure'"
+      );
+      if (secureType.length > 0 && secureType[0].type.toUpperCase() !== 'TEXT') {
+        logger.info('Running migration 008: converting secure columns to TEXT enum...');
+        await client.query('PRAGMA foreign_keys = OFF');
+        const migration8Path = path.join(__dirname, '..', 'db', 'migrations', '008_secure_enum.sqlite.sql');
+        const migration8Sql = fs.readFileSync(migration8Path, 'utf-8');
+        const statements8 = migration8Sql.split(';').map((s: string) => s.trim()).filter((s: string) => s.length > 0 && !s.startsWith('--'));
+        for (const statement of statements8) {
+          await client.query(statement);
+        }
+        await client.query('PRAGMA foreign_keys = ON');
+        logger.info('Migration 008 executed successfully');
+      }
     } else {
       // Migrations PostgreSQL
       const { rows } = await client.query(
@@ -230,6 +247,17 @@ export async function runMigrations(): Promise<void> {
         await client.query(`INSERT INTO security_settings (key, value) VALUES ('max_attempts', '5') ON CONFLICT DO NOTHING`);
         await client.query(`INSERT INTO security_settings (key, value) VALUES ('lockout_duration_ms', '900000') ON CONFLICT DO NOTHING`);
         logger.info('Migration 007 executed successfully');
+      }
+
+      // Migration 008 — convertir imap_secure/smtp_secure de BOOLEAN à TEXT enum
+      const { rows: secureColPg } = await client.query(
+        "SELECT data_type FROM information_schema.columns WHERE table_name='mail_servers' AND column_name='imap_secure'"
+      );
+      if (secureColPg.length > 0 && secureColPg[0].data_type === 'boolean') {
+        const migration8Path = path.join(__dirname, '..', 'db', 'migrations', '008_secure_enum.sql');
+        const migration8Sql = fs.readFileSync(migration8Path, 'utf-8');
+        await client.query(migration8Sql);
+        logger.info('Migration 008 executed successfully');
       }
     }
   } catch (error: any) {
