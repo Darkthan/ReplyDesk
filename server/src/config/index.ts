@@ -1,6 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+if (process.env.NODE_ENV === 'production') {
+  const missing = ['JWT_SECRET', 'ENCRYPTION_KEY', 'ADMIN_PASSWORD'].filter(
+    (key) => !process.env[key]
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables in production: ${missing.join(', ')}`);
+  }
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   db: {

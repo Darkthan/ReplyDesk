@@ -1,0 +1,85 @@
+name: Update Screenshots
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/screenshots/**'
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    name: Take Screenshots
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── Backend ──────────────────────────────────────────────────────────────
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: server
+
+      - name: Build server
+        run: npm run build
+        working-directory: server
+
+      - name: Start server
+        run: node dist/index.js &
+        working-directory: server
+        env:
+          NODE_ENV: development
+          PORT: 3000
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: admin123
+          JWT_SECRET: ci-screenshots-jwt-secret
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+      # ── Frontend ─────────────────────────────────────────────────────────────
+      - name: Install client dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Start frontend (dev server)
+        run: npx vite --port 5173 &
+        working-directory: client
+
+      # ── E2E ──────────────────────────────────────────────────────────────────
+      - name: Install e2e dependencies
+        run: npm ci
+        working-directory: e2e
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      - name: Wait for services
+        run: |
+          npx wait-on http://localhost:3000/api/servers --timeout 30000
+          npx wait-on http://localhost:5173 --timeout 30000
+        working-directory: e2e
+
+      - name: Take screenshots
+        run: npx playwright test
+        working-directory: e2e
+
+      # ── Commit ───────────────────────────────────────────────────────────────
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/
+          if git diff --staged --quiet; then
+            echo "No screenshot changes."
+          else
+            git commit -m "docs: update screenshots [skip ci]"
+            git push
+          fi
