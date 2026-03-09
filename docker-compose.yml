@@ -37,6 +37,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       POLLING_INTERVAL_MS: ${POLLING_INTERVAL_MS:-60000}
     networks:
       - backend
@@ -44,6 +45,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('net').createConnection(3000).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
 
   client:
     build:
@@ -54,7 +61,8 @@ services:
     networks:
       - frontend
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
 volumes:
   pgdata:
