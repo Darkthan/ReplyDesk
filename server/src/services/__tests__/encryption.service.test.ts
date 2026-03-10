@@ -130,8 +130,10 @@ describe('encryption.service', () => {
     test('doit lever une erreur si le tag a été modifié', () => {
       const plainText = 'test';
       const encrypted = encrypt(plainText);
-      // Modifier un caractère du tag
-      const tamperedTag = encrypted.tag.substring(0, encrypted.tag.length - 1) + '0';
+      // Modifier le dernier octet du tag par XOR pour garantir un changement
+      const lastByte = encrypted.tag.slice(-2);
+      const flippedByte = (parseInt(lastByte, 16) ^ 0xff).toString(16).padStart(2, '0');
+      const tamperedTag = encrypted.tag.slice(0, -2) + flippedByte;
 
       expect(() => decrypt(encrypted.enc, encrypted.iv, tamperedTag)).toThrow();
     });
