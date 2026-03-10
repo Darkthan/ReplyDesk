@@ -21,7 +21,7 @@ describe('smtp.service - sendReply', () => {
   const mockSmtpConfig = {
     host: 'smtp.example.com',
     port: 465,
-    secure: true,
+    secure: 'ssl' as const,
     auth: {
       user: 'user@example.com',
       pass: 'password123',
@@ -43,7 +43,9 @@ describe('smtp.service - sendReply', () => {
     expect(nodemailer.createTransport).toHaveBeenCalledWith({
       host: mockSmtpConfig.host,
       port: mockSmtpConfig.port,
-      secure: mockSmtpConfig.secure,
+      secure: true,
+      requireTLS: false,
+      ignoreTLS: false,
       auth: mockSmtpConfig.auth,
       tls: { rejectUnauthorized: false },
     });
@@ -149,7 +151,7 @@ describe('smtp.service - sendReply', () => {
     const customConfig = {
       host: 'custom-smtp.com',
       port: 587,
-      secure: false,
+      secure: 'starttls' as const,
       auth: {
         user: 'custom@example.com',
         pass: 'custompass',
@@ -169,6 +171,8 @@ describe('smtp.service - sendReply', () => {
       host: 'custom-smtp.com',
       port: 587,
       secure: false,
+      requireTLS: true,
+      ignoreTLS: false,
       auth: {
         user: 'custom@example.com',
         pass: 'custompass',

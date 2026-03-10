@@ -26,7 +26,7 @@ describe('imap.service', () => {
     const validConfig = {
       host: 'imap.example.com',
       port: 993,
-      secure: true,
+      secure: 'ssl' as const,
       auth: {
         user: 'user@example.com',
         pass: 'password123',
@@ -39,7 +39,8 @@ describe('imap.service', () => {
       expect(ImapFlow).toHaveBeenCalledWith({
         host: validConfig.host,
         port: validConfig.port,
-        secure: validConfig.secure,
+        secure: true,
+        requireTLS: false,
         auth: validConfig.auth,
         logger: false,
         tls: { rejectUnauthorized: false },
@@ -93,7 +94,7 @@ describe('imap.service', () => {
     const validConfig = {
       host: 'imap.example.com',
       port: 993,
-      secure: true,
+      secure: 'ssl' as const,
       auth: {
         user: 'user@example.com',
         pass: 'password123',

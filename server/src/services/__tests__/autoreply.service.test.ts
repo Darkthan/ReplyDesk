@@ -30,10 +30,11 @@ describe('autoreply.service - processUserAutoReply', () => {
     period_end_date: new Date('2024-01-31'),
     imap_host: 'imap.example.com',
     imap_port: 993,
-    imap_secure: true,
+    imap_secure: 'ssl' as const,
+    imap_login_format: 'full' as const,
     smtp_host: 'smtp.example.com',
     smtp_port: 465,
-    smtp_secure: true,
+    smtp_secure: 'ssl' as const,
     smtp_user: 'relay@example.com',
     smtp_password_enc: 'encrypted-smtp',
     smtp_password_iv: 'iv-smtp',
@@ -74,7 +75,7 @@ describe('autoreply.service - processUserAutoReply', () => {
         {
           host: 'imap.example.com',
           port: 993,
-          secure: true,
+          secure: 'ssl',
           auth: { user: 'user@example.com', pass: 'decrypted-imap-password' },
         },
         expect.any(Date)
@@ -104,7 +105,7 @@ describe('autoreply.service - processUserAutoReply', () => {
         {
           host: 'smtp.example.com',
           port: 465,
-          secure: true,
+          secure: 'ssl',
           auth: { user: 'relay@example.com', pass: 'decrypted-smtp-password' },
         },
         {
