@@ -1,8 +1,10 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAppSettings } from '../context/AppSettingsContext';
 
 export default function AdminLayout() {
   const { admin, logout } = useAdminAuth();
+  const { appName, logoUrl } = useAppSettings();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,10 +23,14 @@ export default function AdminLayout() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                <svg className="w-8 h-8 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <span className="text-xl font-bold text-gray-900">EmailAuto Admin</span>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={appName} className="w-8 h-8 object-contain mr-2" />
+                ) : (
+                  <svg className="w-8 h-8 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
+                <span className="text-xl font-bold text-gray-900">{appName} Admin</span>
               </div>
 
               <div className="hidden md:flex space-x-4">
@@ -67,6 +73,16 @@ export default function AdminLayout() {
                   }`}
                 >
                   Sécurité
+                </Link>
+                <Link
+                  to="/admin/app-settings"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/admin/app-settings')
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Personnalisation
                 </Link>
               </div>
             </div>

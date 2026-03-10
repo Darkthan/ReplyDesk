@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
+import { useAppSettings } from '../context/AppSettingsContext';
 
 interface MailServer {
   id: string;
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, user, loading: authLoading } = useAuth();
+  const { appName, logoUrl } = useAppSettings();
   const navigate = useNavigate();
 
   // Redirection si déjà connecté
@@ -47,8 +49,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-indigo-600 mb-2">EmailAuto</h1>
-        <p className="text-center text-gray-500 mb-6">Gestion d'auto-réponse email</p>
+        <div className="text-center mb-6">
+          {logoUrl && <img src={logoUrl} alt={appName} className="w-16 h-16 object-contain mx-auto mb-3" />}
+          <h1 className="text-2xl font-bold text-indigo-600">{appName}</h1>
+          <p className="text-gray-500 text-sm mt-1">Gestion d'auto-réponse email</p>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded mb-4">{error}</div>

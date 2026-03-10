@@ -1,6 +1,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useAppSettings } from '../../context/AppSettingsContext';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -8,6 +9,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, admin } = useAdminAuth();
+  const { appName, logoUrl } = useAppSettings();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,13 +41,17 @@ export default function AdminLoginPage() {
         <div className="bg-white rounded-lg shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-              <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4 overflow-hidden">
+              {logoUrl ? (
+                <img src={logoUrl} alt={appName} className="w-12 h-12 object-contain" />
+              ) : (
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              )}
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Administration</h1>
-            <p className="text-gray-600 mt-2">EmailAuto - Espace Admin</p>
+            <p className="text-gray-600 mt-2">{appName} - Espace Admin</p>
           </div>
 
           {/* Formulaire */}
@@ -132,7 +138,7 @@ export default function AdminLoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-6 text-white text-sm">
-          <p>EmailAuto © 2026 - Système d'auto-réponse email</p>
+          <p>{appName} © 2026 - Système d'auto-réponse email</p>
         </div>
       </div>
     </div>

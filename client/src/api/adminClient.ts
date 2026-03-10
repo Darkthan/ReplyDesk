@@ -185,4 +185,16 @@ export const adminApi = {
   async unlockAll() {
     return this.request('/admin/security/locks', { method: 'DELETE' });
   },
+
+  // Paramètres application
+  async getAppSettings() {
+    return this.request('/admin/app-settings');
+  },
+
+  async updateAppSettings(data: { app_name?: string; app_logo?: string | null }) {
+    return this.request('/admin/app-settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
 };
