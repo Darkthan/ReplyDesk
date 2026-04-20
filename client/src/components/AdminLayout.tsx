@@ -75,6 +75,16 @@ export default function AdminLayout() {
                   Sécurité
                 </Link>
                 <Link
+                  to="/admin/stats"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/admin/stats')
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Statistiques
+                </Link>
+                <Link
                   to="/admin/app-settings"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive('/admin/app-settings')

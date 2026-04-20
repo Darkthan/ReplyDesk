@@ -186,6 +186,34 @@ export const adminApi = {
     return this.request('/admin/security/locks', { method: 'DELETE' });
   },
 
+  // Statistiques des réponses
+  async getStatsUsers() {
+    return this.request('/admin/stats/users');
+  },
+
+  async getRepliesPerDay(params?: { days?: number; user_id?: string }) {
+    const qs = new URLSearchParams();
+    if (params?.days) qs.set('days', String(params.days));
+    if (params?.user_id) qs.set('user_id', params.user_id);
+    const query = qs.toString();
+    return this.request(`/admin/stats/replies-per-day${query ? `?${query}` : ''}`);
+  },
+
+  async getRepliesPerHour(params?: { days?: number; user_id?: string }) {
+    const qs = new URLSearchParams();
+    if (params?.days) qs.set('days', String(params.days));
+    if (params?.user_id) qs.set('user_id', params.user_id);
+    const query = qs.toString();
+    return this.request(`/admin/stats/replies-per-hour${query ? `?${query}` : ''}`);
+  },
+
+  async getTopUsers(params?: { days?: number }) {
+    const qs = new URLSearchParams();
+    if (params?.days) qs.set('days', String(params.days));
+    const query = qs.toString();
+    return this.request(`/admin/stats/top-users${query ? `?${query}` : ''}`);
+  },
+
   // Paramètres application
   async getAppSettings() {
     return this.request('/admin/app-settings');

@@ -6,6 +6,7 @@ import { closuresPublicRouter, closuresAdminRouter } from './closures.routes';
 import usersRoutes from './users.routes';
 import subscriptionsRoutes from './subscriptions.routes';
 import securityRoutes from './security.routes';
+import statsRoutes from './stats.routes';
 import appSettingsRoutes from './appSettings.routes';
 import { ServerModel } from '../models/server.model';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -21,6 +22,7 @@ router.use('/admin/servers', serversRoutes);
 router.use('/admin/closures', closuresAdminRouter);
 router.use('/admin/users', usersRoutes);
 router.use('/admin/security', securityRoutes);
+router.use('/admin/stats', statsRoutes);
 
 // Paramètres applicatifs (public + admin)
 router.use('/', appSettingsRoutes);

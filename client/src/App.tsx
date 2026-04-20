@@ -13,6 +13,7 @@ import ServersPage from './pages/admin/ServersPage';
 import ClosuresPage from './pages/admin/ClosuresPage';
 import UsersPage from './pages/admin/UsersPage';
 import SecurityPage from './pages/admin/SecurityPage';
+import StatsPage from './pages/admin/StatsPage';
 import ChangePasswordPage from './pages/admin/ChangePasswordPage';
 import AppSettingsPage from './pages/admin/AppSettingsPage';
 
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="closures" element={<ClosuresPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="security" element={<SecurityPage />} />
+              <Route path="stats" element={<StatsPage />} />
               <Route path="change-password" element={<ChangePasswordPage />} />
               <Route path="app-settings" element={<AppSettingsPage />} />
             </Route>
