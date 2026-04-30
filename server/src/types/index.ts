@@ -33,6 +33,7 @@ export interface User {
 export interface ClosurePeriod {
   id: string;
   name: string;
+  type: 'period' | 'holiday';
   start_date: Date;
   end_date: Date;
   default_subject: string;

@@ -3,10 +3,16 @@ import { ClosureModel } from '../models/closure.model';
 import { SubscriptionModel } from '../models/subscription.model';
 
 export const ClosuresController = {
-  // Liste des périodes admin (created_by IS NULL)
+  // Liste des périodes admin (type='period', created_by IS NULL)
   async list(_req: Request, res: Response): Promise<void> {
     const closures = await ClosureModel.findAll();
     res.json(closures);
+  },
+
+  // Liste des jours fériés admin (type='holiday', created_by IS NULL)
+  async listHolidays(_req: Request, res: Response): Promise<void> {
+    const holidays = await ClosureModel.findAllHolidays();
+    res.json(holidays);
   },
 
   async getById(req: Request, res: Response): Promise<void> {
@@ -25,6 +31,12 @@ export const ClosuresController = {
       created_by: null,
     });
     res.status(201).json(closure);
+  },
+
+  // Création en masse de jours fériés
+  async batchCreateHolidays(req: Request, res: Response): Promise<void> {
+    const created = await ClosureModel.batchCreateHolidays(req.body);
+    res.status(201).json(created);
   },
 
   async update(req: Request, res: Response): Promise<void> {

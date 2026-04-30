@@ -69,6 +69,7 @@ export const api = {
 
   // Closures admin (pour s'abonner)
   getClosures: () => request<any[]>('/closures'),
+  getHolidays: () => request<any[]>('/closures/holidays'),
 
   // Mes périodes personnelles
   getMineClosures: () => request<any[]>('/closures/mine'),

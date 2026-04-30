@@ -19,9 +19,20 @@ const updateClosureSchema = createClosureSchema.partial().extend({
   is_active: z.boolean().optional(),
 });
 
+const batchHolidaysSchema = z.object({
+  default_subject: z.string().min(1, 'Sujet par défaut requis'),
+  default_message: z.string().min(1, 'Message par défaut requis'),
+  reason: z.string().optional(),
+  holidays: z.array(z.object({
+    name: z.string().min(1, 'Nom du jour férié requis'),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide (YYYY-MM-DD)'),
+  })).min(1, 'Au moins un jour férié requis'),
+});
+
 // Routes utilisateur (auth IMAP)
 export const closuresPublicRouter = Router();
 closuresPublicRouter.get('/', authMiddleware, asyncHandler(ClosuresController.list));
+closuresPublicRouter.get('/holidays', authMiddleware, asyncHandler(ClosuresController.listHolidays));
 closuresPublicRouter.get('/mine', authMiddleware, asyncHandler(ClosuresController.listMine));
 closuresPublicRouter.post('/mine', authMiddleware, validate(createClosureSchema), asyncHandler(ClosuresController.createMine));
 closuresPublicRouter.put('/mine/:id', authMiddleware, validate(updateClosureSchema), asyncHandler(ClosuresController.updateMine));
@@ -31,6 +42,8 @@ closuresPublicRouter.delete('/mine/:id', authMiddleware, asyncHandler(ClosuresCo
 export const closuresAdminRouter = Router();
 closuresAdminRouter.use(adminAuthMiddleware);
 closuresAdminRouter.get('/', asyncHandler(ClosuresController.list));
+closuresAdminRouter.get('/holidays', asyncHandler(ClosuresController.listHolidays));
 closuresAdminRouter.post('/', validate(createClosureSchema), asyncHandler(ClosuresController.create));
+closuresAdminRouter.post('/holidays/batch', validate(batchHolidaysSchema), asyncHandler(ClosuresController.batchCreateHolidays));
 closuresAdminRouter.put('/:id', validate(updateClosureSchema), asyncHandler(ClosuresController.update));
 closuresAdminRouter.delete('/:id', asyncHandler(ClosuresController.delete));

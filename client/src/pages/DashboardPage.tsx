@@ -6,6 +6,7 @@ import ClosureForm from '../components/ClosureForm';
 
 export default function DashboardPage() {
   const [adminClosures, setAdminClosures] = useState<any[]>([]);
+  const [adminHolidays, setAdminHolidays] = useState<any[]>([]);
   const [myClosures, setMyClosures] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,12 +17,14 @@ export default function DashboardPage() {
 
   const load = async () => {
     try {
-      const [admin, mine, subs] = await Promise.all([
+      const [admin, holidays, mine, subs] = await Promise.all([
         api.getClosures(),
+        api.getHolidays(),
         api.getMineClosures(),
         api.getSubscriptions(),
       ]);
       setAdminClosures(admin);
+      setAdminHolidays(holidays);
       setMyClosures(mine);
       setSubscriptions(subs);
     } catch {
@@ -33,12 +36,7 @@ export default function DashboardPage() {
 
   useEffect(() => { load(); }, []);
 
-  // Abonnements aux périodes admin
-  const subscribedAdminIds = new Set(
-    subscriptions
-      .filter((s: any) => adminClosures.some((c: any) => c.id === s.closure_period_id))
-      .map((s: any) => s.closure_period_id)
-  );
+  const subscribedIds = new Set(subscriptions.map((s: any) => s.closure_period_id));
 
   const handleSubscribe = async (closureId: string) => {
     await api.createSubscription({ closure_period_id: closureId });
@@ -48,6 +46,14 @@ export default function DashboardPage() {
   const handleUnsubscribe = async (closureId: string) => {
     const sub = subscriptions.find((s: any) => s.closure_period_id === closureId);
     if (sub) { await api.deleteSubscription(sub.id); await load(); }
+  };
+
+  const handleSubscribeAll = async () => {
+    const unsubscribed = adminHolidays.filter((h: any) => !subscribedIds.has(h.id));
+    for (const h of unsubscribed) {
+      await api.createSubscription({ closure_period_id: h.id });
+    }
+    await load();
   };
 
   const handleUpdateSub = async (id: string, data: any) => {
@@ -83,6 +89,8 @@ export default function DashboardPage() {
   const adminSubs = subscriptions.filter((s: any) =>
     adminClosures.some((c: any) => c.id === s.closure_period_id)
   );
+
+  const subscribedHolidayCount = adminHolidays.filter((h: any) => subscribedIds.has(h.id)).length;
 
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
@@ -154,6 +162,66 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* ── Jours fériés ─────────────────────────────────────────── */}
+      {adminHolidays.length > 0 && (
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Jours fériés</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {subscribedHolidayCount}/{adminHolidays.length} abonnement(s) actif(s)
+              </p>
+            </div>
+            {subscribedHolidayCount < adminHolidays.length && (
+              <button
+                onClick={handleSubscribeAll}
+                className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded hover:bg-amber-700"
+              >
+                S'abonner à tous
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {adminHolidays.map((h) => {
+              const sub = subscriptions.find((s: any) => s.closure_period_id === h.id);
+              const isSubscribed = !!sub;
+              return (
+                <div key={h.id} className={`bg-white rounded-lg shadow p-4 border-l-4 ${isSubscribed ? 'border-amber-400' : 'border-gray-200'}`}>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🗓️</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-gray-900">{h.name}</h3>
+                          <StatusBadge start={h.start_date} end={h.end_date} active={h.is_active} />
+                        </div>
+                        <p className="text-xs text-gray-500">{fmtDay(h.start_date)}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => isSubscribed ? handleUnsubscribe(h.id) : handleSubscribe(h.id)}
+                      className={`text-sm px-3 py-1 rounded ${isSubscribed ? 'text-amber-700 bg-amber-50 hover:bg-amber-100' : 'text-gray-600 bg-gray-50 hover:bg-gray-100'}`}
+                    >
+                      {isSubscribed ? '✓ Abonné' : 'S\'abonner'}
+                    </button>
+                  </div>
+                  {isSubscribed && sub && (
+                    <div className="mt-3 pt-3 border-t">
+                      <SubscriptionToggle
+                        subscription={{ ...sub, closure_name: h.name }}
+                        onUpdate={handleUpdateSub}
+                        onDelete={handleDeleteSub}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ── Périodes de l'administration ─────────────────────────── */}
       <section>
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Périodes de l'administration</h2>
@@ -166,11 +234,11 @@ export default function DashboardPage() {
               <div key={c.id}>
                 <ClosureCard
                   closure={c}
-                  subscribed={subscribedAdminIds.has(c.id)}
+                  subscribed={subscribedIds.has(c.id)}
                   onSubscribe={() => handleSubscribe(c.id)}
                   onUnsubscribe={() => handleUnsubscribe(c.id)}
                 />
-                {subscribedAdminIds.has(c.id) && (
+                {subscribedIds.has(c.id) && (
                   <div className="mt-2 pl-4">
                     {adminSubs.filter((s: any) => s.closure_period_id === c.id).map((s: any) => (
                       <SubscriptionToggle
@@ -193,6 +261,10 @@ export default function DashboardPage() {
 
 function fmt(date: string) {
   return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtDay(date: string) {
+  return new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function StatusBadge({ start, end, active }: { start: string; end: string; active: boolean }) {

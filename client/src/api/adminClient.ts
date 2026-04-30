@@ -115,6 +115,22 @@ export const adminApi = {
     });
   },
 
+  async getHolidays() {
+    return this.request('/admin/closures/holidays');
+  },
+
+  async batchCreateHolidays(data: {
+    default_subject: string;
+    default_message: string;
+    reason?: string;
+    holidays: Array<{ name: string; date: string }>;
+  }) {
+    return this.request('/admin/closures/holidays/batch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Utilisateurs
   async getUsers() {
     return this.request('/admin/users');
